@@ -1,0 +1,245 @@
+/* Google Fonts for better typography */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+/* CSS Variables for easy theming */
+:root {
+    --font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+    --primary-color: #007bff;
+    --primary-hover: #0056b3;
+    --secondary-color: #6c757d;
+    --secondary-hover: #5a6268;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --light-bg: #f8f9fa;
+    --dark-bg: #343a40;
+    --border-color: #dee2e6;
+    --text-color: #212529;
+    --text-muted: #6c757d;
+    --white: #fff;
+    --shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+    --z-index-main: 2147483630;
+    --z-index-dialog: 2147483640;
+    --z-index-notify: 2147483647;
+}
+
+#kgilife-query-tool-container {
+    all: initial; /* Reset all inherited styles */
+    font-family: var(--font-family);
+    position: fixed;
+    top: 50px;
+    left: 50px;
+    z-index: var(--z-index-main);
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    width: 70vw;
+    max-width: 1000px;
+    height: 80vh;
+    max-height: 700px;
+    resize: both;
+    overflow: hidden; /* Important for resizing */
+    min-width: 500px;
+    min-height: 300px;
+}
+
+#kgilife-query-tool-container * {
+    all: revert; /* Revert children to browser defaults */
+    box-sizing: border-box;
+}
+
+.kqt-header {
+    background: var(--primary-color);
+    color: var(--white);
+    padding: 10px 15px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    cursor: move;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+}
+
+.kqt-header-title {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.kqt-close-btn {
+    background: none;
+    border: none;
+    color: var(--white);
+    font-size: 24px;
+    font-weight: 700;
+    cursor: pointer;
+    line-height: 1;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+.kqt-close-btn:hover {
+    opacity: 1;
+}
+
+.kqt-main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 15px;
+}
+
+.kqt-toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.kqt-button {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-weight: 500;
+}
+.kqt-button:hover {
+    background-color: var(--primary-hover);
+}
+.kqt-button.secondary { background-color: var(--secondary-color); }
+.kqt-button.secondary:hover { background-color: var(--secondary-hover); }
+.kqt-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.kqt-status-bar {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+.kqt-table-wrapper {
+    flex-grow: 1;
+    overflow: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+}
+
+.kqt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.kqt-table th, .kqt-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+.kqt-table th {
+    background-color: var(--light-bg);
+    font-weight: 700;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    cursor: pointer;
+}
+.kqt-table th:hover {
+    background-color: #e9ecef;
+}
+.kqt-table th .sort-indicator {
+    margin-left: 5px;
+    color: var(--text-muted);
+    display: inline-block;
+    width: 1em;
+}
+.kqt-table tr:hover {
+    background-color: #f1f3f5;
+}
+
+/* Dialog styles */
+.kqt-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: var(--z-index-dialog);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.kqt-dialog {
+    background: var(--white);
+    padding: 25px 30px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    min-width: 400px;
+    max-width: 90vw;
+}
+.kqt-dialog-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--text-color);
+}
+.kqt-dialog-body {
+    margin-bottom: 25px;
+}
+.kqt-dialog-body label {
+    display: block;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+.kqt-dialog-body input[type="radio"] {
+    margin-right: 8px;
+}
+.kqt-dialog-body textarea, .kqt-dialog-body select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    font-size: 14px;
+    font-family: var(--font-family);
+}
+.kqt-dialog-body textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+.kqt-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Notification Styles */
+.kqt-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: var(--z-index-notify);
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: var(--white);
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    transform: translateX(120%);
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.kqt-notification.show {
+    transform: translateX(0);
+}
+.kqt-notification.success { background-color: var(--success-color); }
+.kqt-notification.error { background-color: var(--danger-color); }
+.kqt-notification.info { background-color: var(--info-color); }
