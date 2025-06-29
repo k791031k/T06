@@ -5,20 +5,88 @@
   <title>JS 模組自動轉 HTML 工具（進階版）</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    body { font-family: "Microsoft JhengHei", Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 0; }
-    .container { max-width: 700px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px #0001; padding: 32px 24px; }
-    h1 { color: #0d6efd; text-align: center; }
-    textarea { width: 100%; height: 220px; font-family: Consolas, monospace; font-size: 1em; margin-top: 12px; border-radius: 6px; border: 1.5px solid #ccc; padding: 10px; resize: vertical; }
-    button { background: #0d6efd; color: #fff; border: none; font-size: 1.1em; font-weight: 700; padding: 12px 28px; border-radius: 8px; cursor: pointer; margin-top: 18px; }
-    button:disabled { background: #9ec5fe; cursor: not-allowed; }
-    .result-area { margin-top: 28px; }
-    .success { color: #198754; margin-top: 10px; }
-    .error { color: #dc3545; margin-top: 10px; }
-    .copy-btn, .open-btn, .save-btn { background: #198754; margin-left: 10px; }
-    .open-btn { background: #ffc107; color: #333; }
-    .save-btn { background: #6c757d; color: #fff; }
-    #htmlOutput { width: 100%; height: 260px; font-family: Consolas, monospace; font-size: 1em; margin-top: 12px; border-radius: 6px; border: 1.5px solid #ccc; padding: 10px; resize: vertical; background: #f8f9fa;}
-    @media (max-width: 700px) { .container { padding: 16px 4px; } }
+    body {
+      font-family: "Microsoft JhengHei", Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px #0001;
+      padding: 32px 24px;
+    }
+    h1 {
+      color: #0d6efd;
+      text-align: center;
+    }
+    textarea {
+      width: 100%;
+      font-family: Consolas, monospace;
+      font-size: 1em;
+      margin-top: 12px;
+      border-radius: 6px;
+      border: 1.5px solid #ccc;
+      padding: 10px;
+      resize: vertical;
+    }
+    #jsInput {
+      height: 220px;
+    }
+    #htmlOutput {
+      height: 260px;
+      max-height: 400px;
+      background: #f8f9fa;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      overflow: auto;
+    }
+    button {
+      background: #0d6efd;
+      color: #fff;
+      border: none;
+      font-size: 1.1em;
+      font-weight: 700;
+      padding: 12px 28px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 18px;
+    }
+    button:disabled {
+      background: #9ec5fe;
+      cursor: not-allowed;
+    }
+    .result-area {
+      margin-top: 28px;
+    }
+    .success {
+      color: #198754;
+      margin-top: 10px;
+    }
+    .error {
+      color: #dc3545;
+      margin-top: 10px;
+    }
+    .copy-btn, .open-btn, .save-btn {
+      background: #198754;
+      margin-left: 10px;
+    }
+    .open-btn {
+      background: #ffc107;
+      color: #333;
+    }
+    .save-btn {
+      background: #6c757d;
+      color: #fff;
+    }
+    @media (max-width: 700px) {
+      .container {
+        padding: 16px 4px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -70,8 +138,7 @@
 ${jsCode}
 </script>
 </body>
-</html>
-`;
+</html>`;
     }
 
     document.getElementById('generateBtn').onclick = function() {
@@ -86,6 +153,7 @@ ${jsCode}
       document.getElementById('htmlOutput').value = htmlTpl;
       document.getElementById('status').textContent = '已產生 HTML，可直接複製、預覽或存檔！';
       document.getElementById('status').className = 'success';
+      document.getElementById('htmlOutput').scrollIntoView({ behavior: 'smooth' });
     };
 
     // 複製 HTML
