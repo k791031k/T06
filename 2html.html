@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>JS 模組自動轉 HTML 工具（進階版）</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { font-family: "Microsoft JhengHei", Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 0; }
+    .container { max-width: 700px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 12px #0001; padding: 32px 24px; }
+    h1 { color: #0d6efd; text-align: center; }
+    textarea { width: 100%; height: 220px; font-family: Consolas, monospace; font-size: 1em; margin-top: 12px; border-radius: 6px; border: 1.5px solid #ccc; padding: 10px; resize: vertical; }
+    button { background: #0d6efd; color: #fff; border: none; font-size: 1.1em; font-weight: 700; padding: 12px 28px; border-radius: 8px; cursor: pointer; margin-top: 18px; }
+    button:disabled { background: #9ec5fe; cursor: not-allowed; }
+    .result-area { margin-top: 28px; }
+    .success { color: #198754; margin-top: 10px; }
+    .error { color: #dc3545; margin-top: 10px; }
+    .copy-btn, .open-btn, .save-btn { background: #198754; margin-left: 10px; }
+    .open-btn { background: #ffc107; color: #333; }
+    .save-btn { background: #6c757d; color: #fff; }
+    #htmlOutput { width: 100%; height: 260px; font-family: Consolas, monospace; font-size: 1em; margin-top: 12px; border-radius: 6px; border: 1.5px solid #ccc; padding: 10px; resize: vertical; background: #f8f9fa;}
+    @media (max-width: 700px) { .container { padding: 16px 4px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>JS 模組自動轉 HTML 工具</h1>
+    <p>請將 <b>paste.txt</b> 內容直接貼到下方，或拖拉檔案進來，然後點「產生 HTML」。</p>
+    <textarea id="jsInput" placeholder="請貼上 paste.txt 內容"></textarea>
+    <br>
+    <input type="file" id="fileInput" accept=".txt,.js" style="margin-top:10px;">
+    <br>
+    <button id="generateBtn">產生 HTML</button>
+    <span id="status" class="success"></span>
+    <div class="result-area" style="display:none;">
+      <label for="htmlOutput"><b>產生的 HTML（可直接複製、預覽或存檔）：</b></label>
+      <textarea id="htmlOutput" readonly></textarea>
+      <br>
+      <button id="copyBtn" class="copy-btn">複製 HTML</button>
+      <button id="openBtn" class="open-btn">新分頁預覽</button>
+      <button id="saveBtn" class="save-btn">另存 HTML 到桌面</button>
+    </div>
+  </div>
+  <script>
+    // 拖拉檔案自動讀取
+    document.getElementById('fileInput').addEventListener('change', function(e){
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        document.getElementById('jsInput').value = evt.target.result;
+      };
+      reader.readAsText(file, 'utf-8');
+    });
+
+    // 產生 HTML
+    function makeHtmlTpl(jsCode) {
+      return `<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>自動轉換產生的工具</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; background: #f7f7f7; }
+    body { font-family: 'Microsoft JhengHei', Arial, sans-serif; }
+  </style>
+</head>
+<body>
+<script>
+${jsCode}
+</script>
+</body>
+</html>
+`;
+    }
+
+    document.getElementById('generateBtn').onclick = function() {
+      const jsCode = document.getElementById('jsInput').value.trim();
+      if (!jsCode) {
+        document.getElementById('status').textContent = '請先貼上 paste.txt 內容';
+        document.getElementById('status').className = 'error';
+        return;
+      }
+      const htmlTpl = makeHtmlTpl(jsCode);
+      document.querySelector('.result-area').style.display = '';
+      document.getElementById('htmlOutput').value = htmlTpl;
+      document.getElementById('status').textContent = '已產生 HTML，可直接複製、預覽或存檔！';
+      document.getElementById('status').className = 'success';
+    };
+
+    // 複製 HTML
+    document.getElementById('copyBtn').onclick = function() {
+      const htmlCode = document.getElementById('htmlOutput').value;
+      navigator.clipboard.writeText(htmlCode).then(function(){
+        document.getElementById('status').textContent = '已複製到剪貼簿！';
+        document.getElementById('status').className = 'success';
+      });
+    };
+
+    // 新分頁預覽
+    document.getElementById('openBtn').onclick = function() {
+      const htmlCode = document.getElementById('htmlOutput').value;
+      const blob = new Blob([htmlCode], {type: 'text/html'});
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(()=>URL.revokeObjectURL(url), 60000);
+    };
+
+    // 另存 HTML 到桌面
+    document.getElementById('saveBtn').onclick = function() {
+      const htmlCode = document.getElementById('htmlOutput').value;
+      const blob = new Blob([htmlCode], {type: 'text/html'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'mytool.html';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function(){
+        URL.revokeObjectURL(a.href);
+        document.body.removeChild(a);
+      }, 100);
+      document.getElementById('status').textContent = '已下載 HTML 檔案到預設下載資料夾（可手動移動到桌面）';
+      document.getElementById('status').className = 'success';
+    };
+  </script>
+</body>
+</html>
