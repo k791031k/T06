@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>商品查詢工具</title>
+<style>
+  body {
+    font-family: "Microsoft JhengHei", Arial, sans-serif;
+    background: #f0f2f5;
+    margin: 0; padding: 20px;
+    display: flex; justify-content: center; align-items: flex-start;
+    min-height: 100vh;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+    padding: 24px 28px;
+    max-width: 480px;
+    width: 100%;
+  }
+  h2 {
+    color: #0d6efd;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-weight: 700;
+  }
+  label {
+    display: block;
+    margin-top: 16px;
+    font-weight: 600;
+  }
+  input[type="text"], input[type="password"], select {
+    width: 100%;
+    padding: 10px 14px;
+    margin-top: 6px;
+    font-size: 1rem;
+    border: 1.5px solid #ccc;
+    border-radius: 6px;
+    transition: border-color 0.25s ease;
+  }
+  input:focus, select:focus {
+    border-color: #0d6efd;
+    outline: none;
+    box-shadow: 0 0 8px #0d6efd44;
+  }
+  button {
+    margin-top: 24px;
+    width: 100%;
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 14px 0;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease;
+  }
+  button:disabled {
+    background-color: #9ec5fe;
+    cursor: not-allowed;
+  }
+  button:hover:not(:disabled) {
+    background-color: #084cdf;
+  }
+  .status {
+    margin-top: 12px;
+    font-weight: 600;
+  }
+  .status.error {
+    color: #dc3545;
+  }
+  .status.success {
+    color: #198754;
+  }
+  .result {
+    margin-top: 24px;
+    background: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    padding: 16px;
+    font-family: Consolas, monospace;
+    font-size: 0.95rem;
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .error-info {
+    margin-top: 16px;
+    background: #fff3f3;
+    border: 1px solid #f5c2c7;
+    color: #842029;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+  <div class="card" id="appCard">
+    <h2>商品查詢</h2>
+
+    <!-- 登入區塊 -->
+    <div id="loginSection" style="display:none;">
+      <p>請手動登入以取得 Token</p>
+      <label for="username">帳號</label>
+      <input type="text" id="username" autocomplete="username" placeholder="請輸入帳號" />
+      <label for="password">密碼</label>
+      <input type="password" id="password" autocomplete="current-password" placeholder="請輸入密碼" />
+      <button id="loginBtn">登入</button>
+      <div id="loginStatus" class="status"></div>
+    </div>
+
+    <!-- 查詢區塊 -->
+    <div id="querySection" style="display:none;">
+      <label for="queryType">查詢類型</label>
+      <select id="queryType">
+        <option value="personalCase">個人案件池</option>
+        <option value="planCode">計劃代碼查詢</option>
+      </select>
+      <label for="queryInput">查詢內容（可留空）</label>
+      <input type="text" id="queryInput" placeholder="請輸入查詢條件" />
+      <button id="queryBtn">查詢</button>
+      <div id="queryStatus" class="status"></div>
+      <pre id="result" class="result"></pre>
+    </div>
+
+    <!-- 錯誤詳細說明 -->
+    <div id="errorInfo" class="error-info" style="display:none;"></div>
+  </div>
+
+<script>
+  const API_BASE = "https://euisv-uat.apps.tocp4.kgilife.com.tw";
+  const LOGIN_API = API_BASE + "/euisw/api/sso/token";
+  const PERSONAL_CASE_API = API_BASE + "/euisw/euisb/api/assign/queryPersonalCaseFromPool";
+  const PLAN_CODE_API = API_BASE + "/euisw/euisbq/api/planCodeController/query";
+
+  // 儲存 token key
+  const TOKEN_KEY = "EUISTOKEN";
+
+  // DOM
+  const loginSection = document.getElementById("loginSection");
+  const querySection = document.getElementById("querySection");
+  const errorInfo = document.getElementById("errorInfo");
+  const loginStatus = document.getElementById("loginStatus");
+  const queryStatus = document.getElementById("queryStatus");
+  const resultPre = document.getElementById("result");
+
+  const usernameInput = document.getElementById("username");
+  const passwordInput = document.getElementById("password");
+  const loginBtn = document.getElementById("loginBtn");
+
+  const queryTypeSelect = document.getElementById("queryType");
+  const queryInput = document.getElementById("queryInput");
+  const queryBtn = document.getElementById("queryBtn");
+
+  let token = null;
+
+  // 顯示錯誤詳細說明
+  function showErrorInfo(message) {
+    errorInfo.style.display = "block";
+    errorInfo.innerHTML = `
+      <strong>錯誤詳細說明：</strong><br />
+      ${message}<br /><br />
+      <ul>
+        <li>請確認 API 網域是否正確且可連線。</li>
+        <li>可能是 CORS 設定問題，請後端允許你的網域跨域請求。</li>
+        <li>檢查網路連線是否正常。</li>
+        <li>避免瀏覽器 HTTP/HTTPS 混用問題。</li>
+        <li>若為公司內網 API，請確保你已連上公司 VPN 或內網。</li>
+      </ul>
+    `;
+  }
+  function clearErrorInfo() {
+    errorInfo.style.display = "none";
+    errorInfo.innerHTML = "";
+  }
+
+  // 顯示登入區塊
+  function showLoginSection() {
+    loginSection.style.display = "block";
+    querySection.style.display = "none";
+  }
+  // 顯示查詢區塊
+  function showQuerySection() {
+    loginSection.style.display = "none";
+    querySection.style.display = "block";
+  }
+
+  // 嘗試從 localStorage 取得 token
+  function loadToken() {
+    return localStorage.getItem(TOKEN_KEY);
+  }
+  // 儲存 token
+  function saveToken(tk) {
+    localStorage.setItem(TOKEN_KEY, tk);
+  }
+  // 清除 token
+  function clearToken() {
+    localStorage.removeItem(TOKEN_KEY);
+    token = null;
+  }
+
+  // 自動登入流程（無 token 時）
+  async function autoLogin() {
+    // 預設不自動輸入帳密，改成顯示登入表單讓使用者手動輸入
+    showLoginSection();
+  }
+
+  // 登入 API 呼叫
+  async function login(username, password) {
+    clearErrorInfo();
+    loginStatus.textContent = "登入中...";
+    loginStatus.className = "status";
+    try {
+      const res = await fetch(LOGIN_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      if (!res.ok) {
+        let msg = `HTTP錯誤：${res.status} ${res.statusText}`;
+        showErrorInfo(msg);
+        loginStatus.textContent = "登入失敗";
+        loginStatus.className = "status error";
+        return false;
+      }
+      const data = await res.json();
+      if (data.token) {
+        token = data.token;
+        saveToken(token);
+        loginStatus.textContent = "登入成功";
+        loginStatus.className = "status success";
+        showQuerySection();
+        return true;
+      } else {
+        loginStatus.textContent = "登入失敗：" + (data.message || "未知錯誤");
+        loginStatus.className = "status error";
+        return false;
+      }
+    } catch (e) {
+      loginStatus.textContent = "登入發生錯誤：" + e.message;
+      loginStatus.className = "status error";
+      showErrorInfo(e.message);
+      return false;
+    }
+  }
+
+  // 查詢 API 呼叫
+  async function queryAPI() {
+    clearErrorInfo();
+    queryStatus.textContent = "查詢中...";
+    queryStatus.className = "status";
+    resultPre.textContent = "";
+    let apiUrl = "";
+    let params = {};
+    if (queryTypeSelect.value === "personalCase") {
+      apiUrl = PERSONAL_CASE_API;
+      params = {
+        mainStatus: "2",
+        pageIndex: 1,
+        size: 50,
+        orderBys: []
+      };
+    } else if (queryTypeSelect.value === "planCode") {
+      apiUrl = PLAN_CODE_API;
+      params = {
+        currentPage: 1,
+        pageSize: 10,
+        planCode: queryInput.value.trim(),
+        orderBy: "planCode asc"
+      };
+    } else {
+      queryStatus.textContent = "未知查詢類型";
+      queryStatus.className = "status error";
+      return;
+    }
+    try {
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "SSO-TOKEN": token
+        },
+        body: JSON.stringify(params)
+      });
+      if (!res.ok) {
+        let msg = `HTTP錯誤：${res.status} ${res.statusText}`;
+        showErrorInfo(msg);
+        queryStatus.textContent = "查詢失敗";
+        queryStatus.className = "status error";
+        return;
+      }
+      const data = await res.json();
+      resultPre.textContent = JSON.stringify(data, null, 2);
+      queryStatus.textContent = "查詢成功";
+      queryStatus.className = "status success";
+    } catch (e) {
+      queryStatus.textContent = "查詢發生錯誤：" + e.message;
+      queryStatus.className = "status error";
+      showErrorInfo(e.message);
+    }
+  }
+
+  // 初始化
+  (function init() {
+    token = loadToken();
+    if (token) {
+      showQuerySection();
+    } else {
+      autoLogin();
+    }
+  })();
+
+  // 綁定事件
+  loginBtn.addEventListener("click", async () => {
+    const user = usernameInput.value.trim();
+    const pwd = passwordInput.value.trim();
+    if (!user || !pwd) {
+      loginStatus.textContent = "請輸入帳號與密碼";
+      loginStatus.className = "status error";
+      return;
+    }
+    await login(user, pwd);
+  });
+  queryBtn.addEventListener("click", queryAPI);
+</script>
+</body>
+</html>
